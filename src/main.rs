@@ -5,6 +5,9 @@ use sqlx::postgres::{PgPoolOptions, PgPool};
 use dotenvy::dotenv;
 use std::env;
 use serde::{Serialize, Deserialize};
+use sqlx::migrate::Migrator;
+use std::path::Path as PathMigration;
+
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 struct Animal {
@@ -26,6 +29,14 @@ impl IntoResponse for Animal {
         (StatusCode::OK, Json(self)).into_response()
     }
 }
+
+
+async fn run_migrations_from_path(pool: &PgPool) -> Result<(), sqlx::Error> {
+    let migrator = Migrator::new(PathMigration::new("./migrations")).await?;
+    migrator.run(pool).await?;
+    Ok(())
+}
+
 
 async fn get_all_animals(State(state): State<Arc<DbState>>) -> Result<impl IntoResponse, (StatusCode, String)> {
     let animals = sqlx::query_as::<_, Animal>("SELECT * FROM animals")
@@ -159,30 +170,17 @@ async fn main() {
         .await
         .expect("Failed to create database connection pool");
 
-
-    sqlx::query(
-        r#"
-        CREATE TABLE IF NOT EXISTS animals (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(100) NOT NULL UNIQUE,
-            category VARCHAR(50) NOT NULL,
-            health SMALLINT NOT NULL CHECK (health >= 0 AND health <= 100),
-            satiety SMALLINT NOT NULL CHECK (satiety >= 0 AND satiety <= 100)
-        )
-        "#
-    )
-    .execute(&pool)
-    .await
-    .expect("Failed to create table");
+    let _ = run_migrations_from_path(&pool)
+        .await;
 
     let state = Arc::new(DbState { pool });
 
     let app = Router::new()
         .route("/animals", get(get_all_animals))
-        .route("/animals/:category", get(get_animals_by_category))
+        .route("/animals/{category}", get(get_animals_by_category))
         .route("/animal", post(create_animal))
-        .route("/animal/name/:name", get(get_animal_by_name))
-        .route("/animal/id/:id", 
+        .route("/animal/name/{name}", get(get_animal_by_name))
+        .route("/animal/id/{id}", 
             get(get_animal_by_id)
             .delete(delete_animal)
             .put(update_animal)
