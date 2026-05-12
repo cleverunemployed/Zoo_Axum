@@ -2,8 +2,8 @@ use dotenvy::dotenv;
 use std::env;
 
 pub struct Config {
-    database_url: String,
-    port: String,
+    pub database_url: String,
+    pub port: String,
 }
 
 impl Config {
@@ -14,9 +14,9 @@ impl Config {
         let port = env::var("PORT").expect("PORT must be set");
 
 
-        Config(
-            database_url.to_string(),
-            port.to_string()
-        )
+        Config{
+            database_url: database_url.to_string(),
+            port: port.to_string()
+        }
     }
 }
