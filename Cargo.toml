@@ -10,3 +10,5 @@ serde = "1.0.228"
 sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "postgres"] }
 tokio = {version = "1.52.3", default-features = false, features = ["rt-multi-thread"] }
 tower = "0.5.3"
+utoipa = { version = "5.5.0", features = ["axum"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum", "vendored"] }
