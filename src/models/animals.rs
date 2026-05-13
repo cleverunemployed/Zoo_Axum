@@ -23,3 +23,16 @@ impl IntoResponse for Animal {
         (StatusCode::OK, Json(self)).into_response()
     }
 }
+
+pub struct ParamsForAnimals {
+    pub category: Option<String>,
+    pub health_symbol: Option<String>,
+    pub health_value: Option<i16>, 
+    pub satiety_symbol: Option<String>,
+    pub satiety_value: Option<i16>,
+}
+
+pub struct ParamsForAnimal {
+    pub id: Option<i32>,
+    pub name: Option<String>,
+}

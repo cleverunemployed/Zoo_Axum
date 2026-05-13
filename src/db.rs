@@ -5,11 +5,6 @@ use sqlx::migrate::Migrator;
 use std::path::Path as PathMigration;
 
 
-#[derive(Clone)]
-pub struct DbState {
-    pub pool: PgPool
-}
-
 
 pub struct DBController {}
 
@@ -17,7 +12,7 @@ impl DBController {
 
     pub fn new() -> Self { DBController {  } }
 
-    pub async fn get_pg_pool(self, database_url: String) -> Arc<DbState> {
+    pub async fn get_pg_pool(self, database_url: String) -> PgPool {
         let pool = PgPoolOptions::new()
             .max_connections(10)
             .acquire_timeout(Duration::from_secs(30))
@@ -28,7 +23,7 @@ impl DBController {
         let _ = self.run_migrations_from_path(&pool)
             .await;
 
-        Arc::new(DbState { pool })
+        pool
     }
 
     async fn run_migrations_from_path(self, pool: &PgPool) -> Result<(), sqlx::Error> {

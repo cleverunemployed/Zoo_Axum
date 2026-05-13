@@ -1,8 +1,13 @@
-use std::sync::Arc;
 use axum::{Router, routing::{get, post}};
-use crate::db::DbState;
+use sqlx::PgPool;
 
-use crate::handlers::prelude::*;
+use crate::{handlers::prelude::*, repositories::animal_repository::AnimalRepository, services::animal_service::AnimalService};
+
+
+#[derive(Clone)]
+pub struct AnimalState {
+    pub service: AnimalService
+}
 
 
 pub struct RouterAnimal {
@@ -10,7 +15,16 @@ pub struct RouterAnimal {
 }
 
 impl RouterAnimal {
-    pub fn new(state: Arc<DbState>) -> Router {
+    pub fn new(pool: PgPool) -> Router {
+
+        let state = AnimalState{
+            service: AnimalService::new(
+                AnimalRepository::new(
+                    pool
+                )
+            )
+        };
+
         let app = Router::new()
             .route("/animals", get(get_all_animals))
             .route("/animals/{category}", get(get_animals_by_category))

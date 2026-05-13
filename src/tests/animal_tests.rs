@@ -1,4 +1,4 @@
-use crate::{db::{DBController, DbState}, models::animals::Animal, routers::animal_route::RouterAnimal};
+use crate::{db::{DBController}, models::animals::Animal, routers::animal_route::RouterAnimal};
 use axum_test::TestServer;
 use axum::{Router, http::StatusCode};
 use serde_json::json;
@@ -8,7 +8,7 @@ use std::env;
 use sqlx;
 
 
-async fn setup_test_db() -> Arc<DbState> {
+async fn setup_test_db() -> PgPool {
     dotenv().ok();
     
     let database_url = env::var("DATABASE_URL")
@@ -18,7 +18,7 @@ async fn setup_test_db() -> Arc<DbState> {
 
     // Clean up any existing data
     let _ = sqlx::query("DELETE FROM animals")
-        .execute(&pool.pool)
+        .execute(&pool)
         .await;
 
     pool

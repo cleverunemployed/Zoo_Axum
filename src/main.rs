@@ -9,6 +9,8 @@ mod schemas;
 mod models;
 mod handlers;
 mod routers;
+mod services;
+mod repositories;
 
 #[cfg(test)]
 mod tests;
@@ -52,6 +54,7 @@ use routers::prelude::*;
 struct ApiDoc;
 
 
+
 #[tokio::main]
 async fn main() {
 
@@ -59,14 +62,14 @@ async fn main() {
 
     let database_url = env_config.database_url;
 
-    let state = DBController::new()
+    let pool = DBController::new()
         .get_pg_pool(database_url)
         .await;
 
     let api_doc = ApiDoc::openapi();
 
     let app = Router::new()
-        .nest("/", RouterAnimal::new(state))
+        .merge(RouterAnimal::new(pool))
         .merge(
             SwaggerUi::new("/swagger-ui")
                 .url("/api-docs/openapi.json", api_doc)
