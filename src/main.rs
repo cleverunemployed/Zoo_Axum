@@ -10,6 +10,9 @@ mod models;
 mod handlers;
 mod routers;
 
+#[cfg(test)]
+mod tests;
+
 use config::Config;
 use db::{DBController};
 use schemas::CreateAnimalRequest;
