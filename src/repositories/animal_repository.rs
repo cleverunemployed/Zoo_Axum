@@ -1,6 +1,6 @@
 
 use crate::{models::animals::{Animal, ParamsForAnimal, ParamsForAnimals}, schemas::CreateAnimalRequest};
-use sqlx::{PgPool, QueryBuilder, error::Error};
+use sqlx::{Execute, PgPool, QueryBuilder, error::Error};
 
 #[derive(Clone)]
 pub struct AnimalRepository {
@@ -17,21 +17,38 @@ impl AnimalRepository {
     pub async fn get_all_animals_by_params(&self, params: ParamsForAnimals) -> Result<Vec<Animal>, Error> {
         let mut query_builder = QueryBuilder::<sqlx::Postgres>::new("SELECT * FROM animals");
         
-        let mut seperated = query_builder.separated(" AND ");
-        
+        let mut has_conditions = false;
+        let mut seperated = query_builder.separated("");
+
         if let Some(category) = params.category {
+            if !has_conditions {
+                seperated.push(" WHERE ");
+                has_conditions = true;
+            }
             seperated.push("category = ").push_bind(category);
         }
         
         if let Some(health_symbol) = &params.health_symbol {
             if let Some(health_value) = params.health_value {
-                seperated.push(format!("{} ", health_symbol)).push_bind(health_value);
+                if !has_conditions {
+                    seperated.push(" WHERE ");
+                    has_conditions = true;
+                } else {
+                    seperated.push(" AND ");
+                }
+                
+                seperated.push(format!("health {} ", health_symbol)).push_bind(health_value);
             }
         }
         
         if let Some(satiety_symbol) = &params.satiety_symbol {
             if let Some(satiety_value) = params.satiety_value {
-                seperated.push(format!("{} ", satiety_symbol)).push_bind(satiety_value);
+                if !has_conditions {
+                    seperated.push(" WHERE ");
+                } else {
+                    seperated.push(" AND ");
+                }
+                seperated.push(format!("satiety {} ", satiety_symbol)).push_bind(satiety_value);
             }
         }
         
@@ -43,20 +60,32 @@ impl AnimalRepository {
     }
 
     pub async fn get_animal_by_params(self, params: ParamsForAnimal) -> Result<Animal, Error> {
+
+        let mut conditions = Vec::new();
         let mut query_builder = QueryBuilder::<sqlx::Postgres>::new("SELECT * FROM animals");
-        
-        let mut seperated = query_builder.separated(" AND ");
-        
+
         if let Some(id) = params.id {
-            seperated.push("id = ").push_bind(id);
+            query_builder.push(" WHERE id = ");
+            query_builder.push_bind(id);
+            conditions.push(true);
         }
         
         if let Some(name) = params.name {
-            seperated.push("name = ").push_bind(name);
+            if conditions.is_empty() {
+                query_builder.push(" WHERE ");
+            } else {
+                query_builder.push(" AND ");
+            }
+            query_builder.push("name = ");
+            query_builder.push_bind(name);
+            conditions.push(true);
+        }
+        
+        if conditions.is_empty() {
+            return Err(Error::RowNotFound);
         }
         
         let query = query_builder.build_query_as::<Animal>();
-        
         let animal = query.fetch_one(&self.pool).await?;
         
         Ok(animal)

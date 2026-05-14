@@ -1,5 +1,5 @@
 
-use std::{sync::Arc, time::Duration};
+use std::{time::Duration};
 use sqlx::postgres::{PgPoolOptions, PgPool};
 use sqlx::migrate::Migrator;
 use std::path::Path as PathMigration;

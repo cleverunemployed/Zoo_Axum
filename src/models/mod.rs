@@ -3,5 +3,5 @@ pub mod animals;
 
 
 pub mod prelude {
-    pub use super::animals::{Animal, ParamsForAnimal, ParamsForAnimals};
+    pub use super::animals::{Animal};
 }

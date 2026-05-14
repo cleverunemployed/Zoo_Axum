@@ -24,6 +24,7 @@ impl IntoResponse for Animal {
     }
 }
 
+#[derive(Debug)]
 pub struct ParamsForAnimals {
     pub category: Option<String>,
     pub health_symbol: Option<String>,
@@ -32,6 +33,7 @@ pub struct ParamsForAnimals {
     pub satiety_value: Option<i16>,
 }
 
+#[derive(Debug)]
 pub struct ParamsForAnimal {
     pub id: Option<i32>,
     pub name: Option<String>,
