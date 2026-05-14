@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{Router};
 use tokio::net::TcpListener;
 use utoipa::{OpenApi};
@@ -25,27 +27,43 @@ use handlers::prelude::*;
 use routers::prelude::*;
 
 
+use crate::handlers::animal_handlers::ApiDoc as AnimalsApiDoc;
+use crate::schemas::{CreateUserRequest, UserResponse};
+use crate::handlers::user_handlers::ApiDoc as UsersApiDoc;
 
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        // Пути из animals
         get_all_animals,
         get_animals_by_category,
         get_animal_by_name,
         get_animal_by_id,
         create_animal,
         update_animal,
-        delete_animal
+        delete_animal,
+        // Пути из users
+        get_all_users,
+        get_user_by_credentials,
+        delete_user,
+        create_user,
     ),
     components(
-        schemas(Animal, CreateAnimalRequest)
+        schemas(
+            Animal, 
+            CreateAnimalRequest,
+            UserResponse, 
+            CreateUserRequest
+        )
     ),
     tags(
-        (name = "animals", description = "Animal management endpoints")
+        (name = "animals", description = "Animal management endpoints"),
+        (name = "users", description = "User management endpoints")
     ),
+
     info(
-        title = "Animals API",
-        description = "A REST API for managing zoo animals with health and satiety tracking",
+        title = "Combined API",
+        description = "A REST API for managing zoo animals and users",
         version = "1.0.0",
         contact(
             name = "API Support",
@@ -53,7 +71,7 @@ use routers::prelude::*;
         )
     )
 )]
-struct ApiDoc;
+pub struct CombinedApiDoc;
 
 
 
@@ -64,14 +82,15 @@ async fn main() {
 
     let database_url = env_config.database_url;
 
-    let pool = DBController::new()
+    let pool = Arc::new(DBController::new()
         .get_pg_pool(database_url)
-        .await;
+        .await);
 
-    let api_doc = ApiDoc::openapi();
+    let api_doc = CombinedApiDoc::openapi();
 
     let app = Router::new()
-        .merge(RouterAnimal::new(pool))
+        .merge(RouterAnimal::new(Arc::clone(&pool)))
+        .merge(RouterUser::new(Arc::clone(&pool)))
         .merge(
             SwaggerUi::new("/swagger-ui")
                 .url("/api-docs/openapi.json", api_doc)

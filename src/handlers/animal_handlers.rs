@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{Json, extract::{Path, State}, response::IntoResponse, http::StatusCode};
+use utoipa::OpenApi;
 use crate::{models::animals::Animal, schemas::CreateAnimalRequest, state::AnimalState};
 
 
@@ -257,3 +258,33 @@ pub async fn create_animal(
 
     Ok((StatusCode::CREATED, Json(id)))
 }
+
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        get_all_animals,
+        get_animals_by_category,
+        get_animal_by_name,
+        get_animal_by_id,
+        create_animal,
+        update_animal,
+        delete_animal
+    ),
+    components(
+        schemas(Animal, CreateAnimalRequest)
+    ),
+    tags(
+        (name = "animals", description = "Animal management endpoints")
+    ),
+    info(
+        title = "Animals API",
+        description = "A REST API for managing zoo animals with health and satiety tracking",
+        version = "1.0.0",
+        contact(
+            name = "API Support",
+            email = "support@example.com"
+        )
+    )
+)]
+pub struct ApiDoc;

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{Router, routing::{get, post}};
 use sqlx::PgPool;
 
@@ -10,7 +12,7 @@ pub struct RouterAnimal {
 }
 
 impl RouterAnimal {
-    pub fn new(pool: PgPool) -> Router {
+    pub fn new(pool: Arc<PgPool>) -> Router {
 
         let state = AnimalState{
             service: AnimalService::new(
