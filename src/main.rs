@@ -11,6 +11,7 @@ mod handlers;
 mod routers;
 mod services;
 mod repositories;
+mod state;
 
 #[cfg(test)]
 mod tests;

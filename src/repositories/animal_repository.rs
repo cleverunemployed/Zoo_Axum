@@ -1,6 +1,6 @@
 
 use crate::{models::animals::{Animal, ParamsForAnimal, ParamsForAnimals}, schemas::CreateAnimalRequest};
-use sqlx::{Execute, PgPool, QueryBuilder, error::Error};
+use sqlx::{PgPool, QueryBuilder, error::Error};
 
 #[derive(Clone)]
 pub struct AnimalRepository {

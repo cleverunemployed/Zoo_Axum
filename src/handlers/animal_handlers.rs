@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{Json, extract::{Path, State}, response::IntoResponse, http::StatusCode};
-use crate::{models::animals::Animal, schemas::CreateAnimalRequest, routers::animal_route::AnimalState};
+use crate::{models::animals::Animal, schemas::CreateAnimalRequest, state::AnimalState};
 
 
 #[utoipa::path(

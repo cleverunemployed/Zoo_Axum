@@ -1,13 +1,8 @@
 use axum::{Router, routing::{get, post}};
 use sqlx::PgPool;
 
-use crate::{handlers::prelude::*, repositories::animal_repository::AnimalRepository, services::animal_service::AnimalService};
+use crate::{handlers::prelude::*, repositories::animal_repository::AnimalRepository, services::animal_service::AnimalService, state::AnimalState};
 
-
-#[derive(Clone)]
-pub struct AnimalState {
-    pub service: AnimalService
-}
 
 
 pub struct RouterAnimal {
