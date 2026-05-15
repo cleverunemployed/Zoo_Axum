@@ -1,25 +1,24 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::{delete, get, post}};
+use axum::{
+    Router,
+    routing::{delete, get},
+};
 use sqlx::PgPool;
 
-use crate::{handlers::prelude::*, repositories::{animal_repository::AnimalRepository, user_repository::UserRepository}, services::{animal_service::AnimalService, user_service::UserService}, state::{AnimalState, UserState}};
+use crate::{
+    handlers::prelude::*,
+    repositories::user_repository::UserRepository,
+    services::user_service::UserService,
+    state::UserState,
+};
 
-
-
-pub struct RouterUser {
-
-}
+pub struct RouterUser {}
 
 impl RouterUser {
     pub fn new(pool: Arc<PgPool>) -> Router {
-
-        let state = UserState{
-            service: UserService::new(
-                UserRepository::new(
-                    pool
-                )
-            )
+        let state = UserState {
+            service: UserService::new(UserRepository::new(pool)),
         };
 
         let app = Router::new()

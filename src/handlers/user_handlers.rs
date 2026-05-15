@@ -1,36 +1,41 @@
-use axum::{Json, extract::{Path, Query, State}, response::IntoResponse, http::StatusCode};
+use crate::{
+    schemas::{CreateUserRequest, DeleteUserRequest, UserResponse},
+    state::UserState,
+};
+use axum::{
+    Json,
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+};
 use std::collections::HashMap;
-use crate::{schemas::{CreateUserRequest, UserResponse}, state::UserState};
 
-use utoipa::OpenApi;
+// use utoipa::OpenApi;
 
-
-
-#[derive(OpenApi)]
-#[openapi(
-    paths(
-        get_all_users,
-        get_user_by_credentials,
-        delete_user,
-        create_user
-    ),
-    tags(
-        (name = "users", description = "User management endpoints")
-    ),
-    components(
-        schemas(UserResponse, CreateUserRequest)
-    )
-)]
-pub struct ApiDoc;
-
+// #[derive(OpenApi)]
+// #[openapi(
+//     paths(
+//         get_all_users,
+//         get_user_by_credentials,
+//         delete_user,
+//         create_user
+//     ),
+//     tags(
+//         (name = "users", description = "User management endpoints")
+//     ),
+//     components(
+//         schemas(UserResponse, CreateUserRequest)
+//     )
+// )]
+// pub struct ApiDoc;
 
 #[utoipa::path(
     get,
     path = "/users",
     tag = "users",
     params(
-        ("filter" = Option<String>, Query, description = "Optional filter parameters"),
-        ("sort" = Option<String>, Query, description = "Sorting criteria")
+        ("role" = Option<String>, Query, description = "Filter on role"),
+        ("is_deleted" = Option<String>, Query, description = "Users is deleted or not?")
     ),
     responses(
         (status = 200, description = "List of users retrieved successfully", body = Vec<UserResponse>),
@@ -40,19 +45,22 @@ pub struct ApiDoc;
 
 pub async fn get_all_users(
     State(state): State<UserState>,
-    Query(params): Query<HashMap<String, String>>
+    Query(params): Query<HashMap<String, String>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let users = state.service
+    let users = state
+        .service
         .clone()
         .get_all(params)
         .await
         .map_err(|e| match e {
-            sqlx::Error::Database(db_err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка БД: {}", db_err))
-            }
-            other => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка: {}", other))
-            }
+            sqlx::Error::Database(db_err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка БД: {}", db_err),
+            ),
+            other => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка: {}", other),
+            ),
         })?;
 
     Ok((StatusCode::OK, Json(users)))
@@ -75,13 +83,17 @@ pub async fn get_all_users(
 )]
 pub async fn get_user_by_credentials(
     State(state): State<UserState>,
-    Query(params): Query<HashMap<String, String>>
+    Query(params): Query<HashMap<String, String>>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     if !params.contains_key("email") || !params.contains_key("password") {
-        return Err((StatusCode::BAD_REQUEST, "Email и password обязательны".to_string()));
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "Email и password обязательны".to_string(),
+        ));
     }
 
-    let user = state.service
+    let user = state
+        .service
         .clone()
         .get(params)
         .await
@@ -89,12 +101,14 @@ pub async fn get_user_by_credentials(
             sqlx::Error::RowNotFound => {
                 (StatusCode::NOT_FOUND, "Пользователь не найден".to_string())
             }
-            sqlx::Error::Database(db_err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка БД: {}", db_err))
-            }
-            other => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка: {}", other))
-            }
+            sqlx::Error::Database(db_err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка БД: {}", db_err),
+            ),
+            other => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка: {}", other),
+            ),
         })?;
 
     Ok((StatusCode::OK, Json(user)))
@@ -104,9 +118,7 @@ pub async fn get_user_by_credentials(
     delete,
     path = "/users/{id}",
     tag = "users",
-    params(
-        ("id" = i32, Path, description = "User database ID", minimum = 1)
-    ),
+    request_body = DeleteUserRequest,
     responses(
         (status = 200, description = "User deleted successfully"),
         (status = 404, description = "User not found", body = String),
@@ -115,25 +127,31 @@ pub async fn get_user_by_credentials(
 )]
 pub async fn delete_user(
     State(state): State<UserState>,
-    Path(user_id): Path<i32>
+    Json(data): Json<DeleteUserRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
-    let deleted_id = state.service
+    let deleted_id = state
+        .service
         .clone()
-        .delete(user_id)
+        .delete(data)
         .await
         .map_err(|e| match e {
-            sqlx::Error::Database(db_err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка БД: {}", db_err))
-            }
-            other => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка: {}", other))
-            }
+            sqlx::Error::Database(db_err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка БД: {}", db_err),
+            ),
+            other => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка: {}", other),
+            ),
         })?;
 
-    Ok((StatusCode::OK, Json(serde_json::json!({
-        "message": "Пользователь успешно удален",
-        "user_id": deleted_id
-    }))))
+    Ok((
+        StatusCode::OK,
+        Json(serde_json::json!({
+            "message": "Пользователь успешно удален",
+            "user_id": deleted_id
+        })),
+    ))
 }
 
 #[utoipa::path(
@@ -150,34 +168,48 @@ pub async fn delete_user(
 )]
 pub async fn create_user(
     State(state): State<UserState>,
-    Json(body): Json<serde_json::Value>
+    Json(body): Json<serde_json::Value>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let params = HashMap::from([
-        ("email".to_string(), body.get("email")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| (StatusCode::BAD_REQUEST, "Email обязателен".to_string()))?
-            .to_string()),
-        ("password".to_string(), body.get("password")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| (StatusCode::BAD_REQUEST, "Password обязателен".to_string()))?
-            .to_string()),
+        (
+            "email".to_string(),
+            body.get("email")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| (StatusCode::BAD_REQUEST, "Email обязателен".to_string()))?
+                .to_string(),
+        ),
+        (
+            "password".to_string(),
+            body.get("password")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| (StatusCode::BAD_REQUEST, "Password обязателен".to_string()))?
+                .to_string(),
+        ),
     ]);
 
-    let user = state.service
+    let user = state
+        .service
         .clone()
         .create(params)
         .await
         .map_err(|e| match e {
             sqlx::Error::Database(db_err) => {
                 if db_err.constraint().is_some() {
-                    (StatusCode::CONFLICT, "Пользователь с таким email уже существует".to_string())
+                    (
+                        StatusCode::CONFLICT,
+                        "Пользователь с таким email уже существует".to_string(),
+                    )
                 } else {
-                    (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка БД: {}", db_err))
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        format!("Ошибка БД: {}", db_err),
+                    )
                 }
             }
-            other => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Ошибка: {}", other))
-            }
+            other => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Ошибка: {}", other),
+            ),
         })?;
 
     Ok((StatusCode::CREATED, Json(user)))

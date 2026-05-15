@@ -3,38 +3,37 @@ use std::collections::HashMap;
 use sqlx::Error;
 
 use crate::{
-    models::animals::{
-        Animal, ParamsForAnimal, ParamsForAnimals
-    }, 
-    repositories::animal_repository::AnimalRepository, 
-    schemas::CreateAnimalRequest
+    models::animals::{Animal, ParamsForAnimal, ParamsForAnimals},
+    repositories::animal_repository::AnimalRepository,
+    schemas::CreateAnimalRequest,
 };
-
 
 #[derive(Clone)]
 pub struct AnimalService {
-    pub repository: AnimalRepository
+    pub repository: AnimalRepository,
 }
 
 impl AnimalService {
     pub fn new(repository: AnimalRepository) -> Self {
-        AnimalService{
-            repository: repository
+        AnimalService {
+            repository: repository,
         }
     }
 
     pub async fn get_all(self, params: HashMap<String, String>) -> Result<Vec<Animal>, Error> {
         let params_struct = ParamsForAnimals {
+            id: params.get("id").and_then(|v| v.parse().ok()),
             category: params.get("category").cloned(),
             health_symbol: params.get("health_symbol").cloned(),
-            health_value: params.get("health_value")
-                .and_then(|v| v.parse().ok()),
+            health_value: params.get("health_value").and_then(|v| v.parse().ok()),
             satiety_symbol: params.get("satiety_symbol").cloned(),
-            satiety_value: params.get("satiety_value")
-                .and_then(|v| v.parse().ok()),
+            satiety_value: params.get("satiety_value").and_then(|v| v.parse().ok()),
         };
 
-        let result = self.repository.get_all_animals_by_params(params_struct).await?;
+        let result = self
+            .repository
+            .get_all_animals_by_params(params_struct)
+            .await?;
 
         Ok(result)
     }
@@ -42,8 +41,7 @@ impl AnimalService {
     pub async fn get(self, params: HashMap<String, String>) -> Result<Animal, Error> {
         let params_struct = ParamsForAnimal {
             name: params.get("name").cloned(),
-            id: params.get("id")
-                .and_then(|v| v.parse().ok()),
+            id: params.get("id").and_then(|v| v.parse().ok()),
         };
 
         let result = self.repository.get_animal_by_params(params_struct).await?;

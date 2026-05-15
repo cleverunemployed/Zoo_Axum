@@ -1,6 +1,6 @@
-use axum::{Json, response::IntoResponse, http::StatusCode};
-use serde::{Serialize, Deserialize};
-use utoipa::{ToSchema};
+use axum::{Json, http::StatusCode, response::IntoResponse};
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 #[schema(example = json!({
@@ -26,9 +26,10 @@ impl IntoResponse for Animal {
 
 #[derive(Debug)]
 pub struct ParamsForAnimals {
+    pub id: Option<i32>,
     pub category: Option<String>,
     pub health_symbol: Option<String>,
-    pub health_value: Option<i16>, 
+    pub health_value: Option<i16>,
     pub satiety_symbol: Option<String>,
     pub satiety_value: Option<i16>,
 }

@@ -1,16 +1,14 @@
-
-use std::{time::Duration};
-use sqlx::postgres::{PgPoolOptions, PgPool};
 use sqlx::migrate::Migrator;
+use sqlx::postgres::{PgPool, PgPoolOptions};
 use std::path::Path as PathMigration;
-
-
+use std::time::Duration;
 
 pub struct DBController {}
 
 impl DBController {
-
-    pub fn new() -> Self { DBController {  } }
+    pub fn new() -> Self {
+        DBController {}
+    }
 
     pub async fn get_pg_pool(self, database_url: String) -> PgPool {
         let pool = PgPoolOptions::new()
@@ -20,8 +18,7 @@ impl DBController {
             .await
             .expect("Failed to create database connection pool");
 
-        let _ = self.run_migrations_from_path(&pool)
-            .await;
+        let _ = self.run_migrations_from_path(&pool).await;
 
         pool
     }
@@ -31,5 +28,4 @@ impl DBController {
         migrator.run(pool).await?;
         Ok(())
     }
-
 }

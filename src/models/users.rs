@@ -1,31 +1,30 @@
+use axum::{Json, http::StatusCode, response::IntoResponse};
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-use axum::{Json, response::IntoResponse, http::StatusCode};
-use serde::{Serialize, Deserialize};
-use utoipa::{ToSchema};
+// pub enum UserRole {
+//     Player,
+//     VipPlayer,
+//     Admin,
+// }
 
-pub enum UserRole {
-    Player,
-    VipPlayer,
-    Admin,
-}
+// impl UserRole {
+//     pub fn name(&self) -> &str {
+//         match self {
+//             UserRole::Player => "player",
+//             UserRole::VipPlayer => "vip",
+//             UserRole::Admin => "admin",
+//         }
+//     }
 
-impl UserRole {
-    pub fn name(&self) -> &str {
-        match self {
-            UserRole::Player => "player",
-            UserRole::VipPlayer => "vip",
-            UserRole::Admin => "admin",
-        }
-    }
-    
-    pub fn value(&self) -> i32 {
-        match self {
-            UserRole::Player => 5,
-            UserRole::VipPlayer => 10,
-            UserRole::Admin => 15,
-        }
-    }
-}
+//     pub fn value(&self) -> i32 {
+//         match self {
+//             UserRole::Player => 5,
+//             UserRole::VipPlayer => 10,
+//             UserRole::Admin => 15,
+//         }
+//     }
+// }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 #[schema(example = json!({
@@ -48,28 +47,26 @@ impl IntoResponse for User {
     }
 }
 
+// #[derive(Debug, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
+// #[schema(example = json!({
+//     "id": 1,
+//     "id_user": 1,
+//     "id_animal": 1
+// }))]
+// pub struct UserAnimals {
+//     pub id: i32,
+//     pub id_user: i32,
+//     pub id_animal: i32,
+// }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
-#[schema(example = json!({
-    "id": 1,
-    "id_user": 1,
-    "id_animal": 1
-}))]
-pub struct UserAnimals {
-    pub id: i32,
-    pub id_user: i32,
-    pub id_animal: i32,
-}
-
-impl IntoResponse for UserAnimals {
-    fn into_response(self) -> axum::response::Response {
-        (StatusCode::OK, Json(self)).into_response()
-    }
-}
+// impl IntoResponse for UserAnimals {
+//     fn into_response(self) -> axum::response::Response {
+//         (StatusCode::OK, Json(self)).into_response()
+//     }
+// }
 
 #[derive(Debug)]
 pub struct ParamsForUsers {
     pub role: Option<String>,
     pub is_deleted: Option<bool>,
 }
-
