@@ -14,6 +14,7 @@ mod routers;
 mod schemas;
 mod services;
 mod state;
+mod hash_password;
 
 #[cfg(test)]
 mod tests;

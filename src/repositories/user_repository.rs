@@ -49,9 +49,8 @@ impl UserRepository {
     pub async fn get_user(self, data: &CreateUserRequest) -> Result<UserResponse, Error> {
         let user = sqlx::query_as!(
             UserResponse,
-            "SELECT id, email, role FROM users WHERE email = $1 AND password = $2",
-            data.email,
-            data.password
+            "SELECT id, email, role FROM users WHERE email = $1",
+            data.email
         )
         .fetch_one(&*self.pool)
         .await?;

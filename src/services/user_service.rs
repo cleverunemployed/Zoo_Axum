@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    models::users::{ParamsForUsers, User},
-    repositories::user_repository::UserRepository,
-    schemas::{CreateUserRequest, DeleteUserRequest, UserResponse},
+    hash_password::hash_password, models::users::{ParamsForUsers, User}, repositories::user_repository::UserRepository, schemas::{CreateUserRequest, DeleteUserRequest, UserResponse}
 };
 use sqlx::Error;
 
@@ -34,7 +32,7 @@ impl UserService {
     }
 
     pub async fn get(self, params: HashMap<String, String>) -> Result<UserResponse, Error> {
-        let params_struct = CreateUserRequest {
+        let mut params_struct = CreateUserRequest {
             email: params
                 .get("email")
                 .cloned()
@@ -44,6 +42,8 @@ impl UserService {
                 .cloned()
                 .ok_or_else(|| Error::InvalidArgument("Not founded password!".to_string()))?,
         };
+
+        params_struct.password = hash_password(params_struct.password);
 
         let result = self.repository.get_user(&params_struct).await?;
 
@@ -51,13 +51,17 @@ impl UserService {
     }
 
     pub async fn delete(self, data: DeleteUserRequest) -> Result<i32, Error> {
+
+        let mut data = data;
+        data.password = hash_password(data.password);
+
         let result = self.repository.delete_user(data).await?;
 
         Ok(result)
     }
 
     pub async fn create(self, params: HashMap<String, String>) -> Result<UserResponse, Error> {
-        let params_struct = CreateUserRequest {
+        let mut params_struct = CreateUserRequest {
             email: params
                 .get("email")
                 .cloned()
@@ -67,6 +71,8 @@ impl UserService {
                 .cloned()
                 .ok_or_else(|| Error::InvalidArgument("Not founded password!".to_string()))?,
         };
+
+        params_struct.password = hash_password(params_struct.password);
 
         // let existing_user = self.repository.clone().get_user(&params_struct).await?;
 
